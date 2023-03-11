@@ -36,8 +36,11 @@ typedef s32 b32;
 #define TRUE 1
 #define FALSE 0
 
-// NOTE: This is needed for the linker to use floats
-int _fltused;
+extern "C"
+{
+	// NOTE: This is needed for the linker to use floats
+	int _fltused;
+}
 
 typedef float r32;
 typedef double r64;
@@ -183,6 +186,9 @@ define_buffer_append(u8)
 define_buffer_append(u16)
 define_buffer_append(u32)
 define_buffer_append(u64)
+
+define_buffer_append(r32)
+define_buffer_append(r64)
 #undef define_buffer_append
 
 Buffer
