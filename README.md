@@ -1,0 +1,1 @@
+Following along with the Performance Aware course that Casey Muratori is creating. More information can be found at computerenhance.com .
