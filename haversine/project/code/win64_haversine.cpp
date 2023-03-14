@@ -98,12 +98,15 @@ WinMainCRTStartup
 #if 0
 	Buffer coordinates = Generate40Mil();
 	
-	b32 WriteSucceeded = Win64WriteEntireFile("d:\\programming\\github\\haversine-thing\\haversine\\build\\fortymil.array", coordinates.size, coordinates.memory);
-	Assert(WriteSucceeded == TRUE);
+	b32 coordWriteSucceeded = Win64WriteEntireFile("d:\\programming\\github\\haversine-thing\\haversine\\build\\fortymil.array", coordinates.size, coordinates.memory);
+	Assert(coordWriteSucceeded == TRUE);
 #endif
 	
 	read_file_result pairs = Win64ReadEntireFile("d:\\programming\\github\\haversine-thing\\haversine\\build\\fortymil.array");
 	Assert(pairs.Contents != 0);
+	
+	Buffer jsonFile = win64_make_buffer((183106 * PAGE), PAGE_READWRITE);
+	String temp = create_string(&jsonFile, "{\"pairs\":[");
 	
 	r32 current = 0.0;
 	r32 *num = (r32 *)pairs.Contents;
@@ -111,7 +114,27 @@ WinMainCRTStartup
 	while(count < 40000000)
 	{
 		
-		u8 chars[11] = {};
+		u32 whichNum = count % 4;
+		if(whichNum == 0)
+		{
+			temp = create_string(&jsonFile, "\n\t{\"x0\":");
+			
+		}
+		else if(whichNum == 1)
+		{
+			temp = create_string(&jsonFile, ", \"y0\":");
+		}
+		else if(whichNum == 2)
+		{
+			temp = create_string(&jsonFile, ", \"x1\":");
+			
+		}
+		else if(whichNum == 3)
+		{
+			temp = create_string(&jsonFile, ", \"y1\":");
+		}
+		
+		u8 chars[12] = {};
 		u8 c = 0;
 		current = *num;
 		
@@ -155,9 +178,22 @@ WinMainCRTStartup
 			chars[c++] = (u8)(digit + '0');
 		}
 		
+		temp = create_string(&jsonFile, (char *)chars);
+		
+		if(whichNum == 3)
+		{
+			temp = create_string(&jsonFile, "},");
+		}
+		
 		num++;
 		count++;
 	}
+	
+	temp.chars[(temp.len-1)] = '\n';
+	temp = create_string(&jsonFile, "\t]\n}");
+	
+	b32 jsonWriteSucceeded = Win64WriteEntireFile("d:\\programming\\github\\haversine-thing\\haversine\\build\\tenMil.json", (u32)((jsonFile.end - jsonFile.memory) + 1), jsonFile.memory);
+	Assert(jsonWriteSucceeded == TRUE);
 	
 	return(0);
 }
