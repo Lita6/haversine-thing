@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <intrin.h>
 
 #define global static
 
@@ -32,6 +33,8 @@ typedef uint64_t u64;
 typedef s8 b8;
 typedef s16 b16;
 typedef s32 b32;
+
+#define Pi32 3.141159265359f
 
 #define TRUE 1
 #define FALSE 0
@@ -242,6 +245,24 @@ GetStringLength
 	return(result);
 }
 
+u32
+scan_string
+(String string, u8 ch)
+{
+	
+	u32 result = 0;
+	for(u32 i = 0; i < string.len; i++)
+	{
+		if(string.chars[i] == ch)
+		{
+			result = i;
+			break;
+		}
+	}
+	
+	return(result);
+}
+
 b32
 IsMemZero
 (u8 *memory, u32 size)
@@ -256,6 +277,65 @@ IsMemZero
 		}
 	}
 	
+	return(result);
+}
+
+r32
+DegreesToRadians
+(r32 deg)
+{
+	r32 result = deg * Pi32 / 180.0f;
+	return(result);
+}
+
+r32
+sqrt32
+(r32 a)
+{
+	r32 result = 0;
+	
+	__m128 float_reg = _mm_load_ss(&a);
+	float_reg = _mm_sqrt_ss(float_reg);
+	result = _mm_cvtss_f32(float_reg);
+	
+	return(result);
+}
+
+r32
+pow
+(r32 a, r32 b)
+{
+	r32 result = a;
+	
+	for(u32 i = 0; i < (u32)b; i++)
+	{
+		result *= a;
+	}
+	
+	return(result);
+}
+
+r32
+sin32
+(r32 rad)
+{
+	r32 result = (pow(rad, 3.0f) / 6.0f) + (pow(rad, 5.0f) / 120.0f) - (pow(rad, 7.0f) / 5040.0f);
+	return(result);
+}
+
+r32
+cos32
+(r32 rad)
+{
+	r32 result = (pow(rad, 2.0f) / 2.0f) + (pow(rad, 4.0f) / 24.0f) - (pow(rad, 6.0f) / 720.0f);
+	return(result);
+}
+
+r32
+asin32
+(r32 z)
+{
+	r32 result = z + (0.5f * (pow(z, 3.0f) / 3.0f)) + (0.375f * (pow(z, 5.0f) / 5.0f)) + (0.3125f * (pow(z, 7.0f) / 7.0f));
 	return(result);
 }
 
