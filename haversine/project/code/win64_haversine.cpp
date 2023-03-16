@@ -1,5 +1,4 @@
 /* TODO:
-*    - figure out how to deal with numbers larger than r64
 *    - do timings
 */
 
@@ -185,6 +184,16 @@ ConvertToJSON
 	
 }
 
+s64
+GetCounter
+()
+{
+	LARGE_INTEGER query_counter = {};
+	QueryPerformanceCounter(&query_counter);
+	s64 result = query_counter.QuadPart;
+	return(result);
+}
+
 int __stdcall
 WinMainCRTStartup
 (void)
@@ -196,6 +205,10 @@ WinMainCRTStartup
 	PAGE = SysInfo.dwPageSize;
 	
 	SEED = (u64)0x0123456789ABCDEF;
+	
+	LARGE_INTEGER temp_perf_frequency = {};
+	QueryPerformanceFrequency(&temp_perf_frequency);
+	s64 perfFrequency = temp_perf_frequency.QuadPart;
 	
 #if 0
 	Buffer coordinates = Generate40Mil();
@@ -210,6 +223,8 @@ WinMainCRTStartup
 	
 	ConvertToJSON(pairs);
 #endif
+	
+	s64 BeginCounter = GetCounter();
 	
 	Buffer coord_pairs = win64_make_buffer(AlignSize((40000000 * sizeof(r32)), PAGE), PAGE_READWRITE);
 	
@@ -273,9 +288,11 @@ WinMainCRTStartup
 		ReadByte++;
 	}
 	
+	s64 InputCounter = GetCounter();
+	
 	r32 *CoordPair = (r32 *)coord_pairs.memory;
-	r64 Sum = 0.0f;
-	r64 Count = 0.0f;
+	r32 Sum = 0.0f;
+	u32 Count = 0;
 	while(CoordPair < (r32 *)coord_pairs.end)
 	{
 		
@@ -284,15 +301,29 @@ WinMainCRTStartup
 		r32 Y0 = DegreesToRadians(CoordPair[1]);
 		r32 Y1 = DegreesToRadians(CoordPair[3]);
 		
-		r32 rootTerm = pow((sin32(dY / 2.0f)), 2.0f) + cos32(Y0) * cos32(Y1) * pow((sin32(dX / 2.0f)), 2.0f);
-		r32 distance = 2.0f * 6371.0f * asin32(sqrt32(rootTerm));
-		Sum += (r64)distance;
-		Count += 1.0;
+		r32 rootTerm = (pow(sin32(dY / 2.0f), 2.0f)) + cos32(Y0) * cos32(Y1) * pow((sin32(dX / 2.0f)), 2.0f);
+		r32 sqrtRoot = sqrt32(rootTerm);
+		r32 asinSqrt = asin32(sqrtRoot);
+		r32 distance = 2.0f * 6371.0f * asinSqrt;
+		
+		Sum += distance;
+		Count++;
 		CoordPair += 4;
 	}
 	
-	r64 Average = Sum / Count;
+	r32 Average = Sum / (r32)Count;
 	(void)Average;
+	
+	s64 CalcCounter = GetCounter();
+	
+	r32 InputTime = (r32)(InputCounter - BeginCounter) / (r32)perfFrequency;
+	(void)InputTime;
+	r32 CalcTime = (r32)(CalcCounter - InputCounter) / (r32)perfFrequency;
+	(void)CalcTime;
+	r32 TotalTime = (r32)(CalcCounter - BeginCounter) / (r32)perfFrequency;
+	(void)TotalTime;
+	r32 ThroughPut = (r32)Count / TotalTime;
+	(void)ThroughPut;
 	
 	return(0);
 }

@@ -307,7 +307,7 @@ pow
 {
 	r32 result = a;
 	
-	for(u32 i = 0; i < (u32)b; i++)
+	for(u32 i = 0; i < ((u32)b-1); i++)
 	{
 		result *= a;
 	}
@@ -319,7 +319,8 @@ r32
 sin32
 (r32 rad)
 {
-	r32 result = (pow(rad, 3.0f) / 6.0f) + (pow(rad, 5.0f) / 120.0f) - (pow(rad, 7.0f) / 5040.0f);
+	
+	r32 result = rad - (pow(rad, 3.0f) / 6.0f) + (pow(rad, 5.0f) / 120.0f) - (pow(rad, 7.0f) / 5040.0f);
 	return(result);
 }
 
@@ -327,7 +328,8 @@ r32
 cos32
 (r32 rad)
 {
-	r32 result = (pow(rad, 2.0f) / 2.0f) + (pow(rad, 4.0f) / 24.0f) - (pow(rad, 6.0f) / 720.0f);
+	
+	r32 result = 1 - (pow(rad, 2.0f) / 2.0f) + (pow(rad, 4.0f) / 24.0f) - (pow(rad, 6.0f) / 720.0f);
 	return(result);
 }
 
