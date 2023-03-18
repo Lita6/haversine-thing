@@ -302,9 +302,7 @@ WinMainCRTStartup
 		r32 Y1 = DegreesToRadians(CoordPair[3]);
 		
 		r32 rootTerm = (pow(sin32(dY / 2.0f), 2.0f)) + cos32(Y0) * cos32(Y1) * pow((sin32(dX / 2.0f)), 2.0f);
-		r32 sqrtRoot = sqrt32(rootTerm);
-		r32 asinSqrt = asin32(sqrtRoot);
-		r32 distance = 2.0f * 6371.0f * asinSqrt;
+		r32 distance = 2.0f * 6371.0f * asin32(sqrt32(rootTerm));
 		
 		Sum += distance;
 		Count++;
