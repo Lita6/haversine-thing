@@ -1,5 +1,3 @@
-/* date = December 22nd 2022 5:14 pm */
-
 #ifndef WIN64_ASSEMBLE_H
 #define WIN64_ASSEMBLE_H
 
