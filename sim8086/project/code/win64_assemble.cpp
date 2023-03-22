@@ -50,6 +50,30 @@ find_reg_address
 	
 }
 
+String
+copy_string
+(Buffer *dest, String str)
+{
+	String result = {};
+	result.chars = dest->end;
+	result.len = str.len;
+	
+	for(u32 i = 0; i < result.len; i++)
+	{
+		buffer_append_u8(dest, str.chars[i]);
+	}
+	
+	return(result);
+}
+
+b32
+IsEndOfLine
+(u8 ch)
+{
+	b32 result = ((ch == '\r') || (ch == '\n')) ? TRUE : FALSE;
+	return(result);
+}
+
 int __stdcall
 WinMainCRTStartup
 (void)
@@ -85,7 +109,14 @@ WinMainCRTStartup
 	create_list_entry(&buffer_strings, &regs, "bh", 0b111);
 	
 	u8 *commandLine = (u8 *)GetCommandLineA();
-	commandLine += 0x49;
+	
+	while((*commandLine != ' ') && (*commandLine != 0))
+	{
+		commandLine++;
+	}
+	Assert(*commandLine != 0);
+	commandLine++;
+	
 	String fileName = create_string(&buffer_strings, (char *)commandLine);
 	buffer_append_u8(&buffer_strings, 0x00);
 	fileName.len++;
@@ -98,7 +129,15 @@ WinMainCRTStartup
 	while(ReadByte < EndOfFile)
 	{
 		
-		if((*ReadByte == '\r') || (*ReadByte == '\n'))
+		if(*ReadByte == ';')
+		{
+			while((IsEndOfLine(*ReadByte) == FALSE) && (ReadByte < EndOfFile))
+			{
+				ReadByte++;
+			}
+		}
+		
+		if(IsEndOfLine(*ReadByte))
 		{
 			ReadByte++;
 			continue;
@@ -154,10 +193,14 @@ WinMainCRTStartup
 		instr = {};
 	}
 	
-	u32 loc = scan_string(fileName, '.');
-	fileName.chars[loc] = 0;
+	String outputName = create_string(&buffer_strings, "output\\");
+	fileName.len = scan_string(fileName, '.');
+	String temp = copy_string(&buffer_strings, fileName);
+	outputName.len += temp.len;
+	buffer_append_u8(&buffer_strings, 0);
+	outputName.len++;
 	
-	b32 writeSucceeded = Win64WriteEntireFile((char *)fileName.chars, (u32)(program.end - program.memory), (void *)program.memory);
+	b32 writeSucceeded = Win64WriteEntireFile((char *)outputName.chars, (u32)(program.end - program.memory), (void *)program.memory);
 	(void)writeSucceeded;
 	
 	return(0);
