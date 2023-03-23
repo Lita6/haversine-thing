@@ -9,7 +9,7 @@ find_end
 (u8 *start)
 {
 	u8 *result = start;
-	while((*result != ' ') || (*result != 0))
+	while((*result != ' ') && (*result != 0))
 	{
 		result++;
 	}
@@ -27,7 +27,7 @@ copy_string
 	
 	for(u32 i = 0; i < result.len; i++)
 	{
-		result.chars[i] = str.chars[i];
+		buffer_append_u8(dest, str.chars[i]);
 	}
 	
 	return(result);
@@ -47,10 +47,17 @@ WinMainCRTStartup
 	
 	u8 *commandLine = (u8 *)GetCommandLineA();
 	
-	u8 *end = find_end(commandLine);
+	u8 *start = find_end(commandLine);
+	if(*start != 0)
+	{
+		start++;
+	}
+	
+	u8 *end = find_end(start);
+	
 	String toCopy = {};
-	toCopy.chars = commandLine;
-	toCopy.len = (u32)(end - commandLine);
+	toCopy.chars = start;
+	toCopy.len = (u32)(end - start);
 	
 	String fileOneName = copy_string(&buffer_strings, toCopy);
 	buffer_append_u8(&buffer_strings, 0x00);
@@ -66,9 +73,14 @@ WinMainCRTStartup
 	fileTwoName.len++;
 	
 	read_file_result fileOne = Win64ReadEntireFile((char *)fileOneName.chars);
-	(void)fileOne;
 	read_file_result fileTwo = Win64ReadEntireFile((char *)fileTwoName.chars);
-	(void)fileTwo;
+	
+	u32 max = (fileOne.ContentsSize <= fileTwo.ContentsSize) ? fileOne.ContentsSize : fileTwo.ContentsSize;
+	
+	for(u32 i = 0; i < max; i++)
+	{
+		Assert(((u8 *)fileOne.Contents)[i] == ((u8 *)fileTwo.Contents)[i]);
+	}
 	
 	return(0);
 }

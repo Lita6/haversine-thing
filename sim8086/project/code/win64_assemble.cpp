@@ -74,6 +74,19 @@ IsEndOfLine
 	return(result);
 }
 
+u8 *
+findEndOfLine
+(u8 *read, u8 *max)
+{
+	
+	u8 *result = read;
+	while((IsEndOfLine(*result) == FALSE) && (result < max))
+	{
+		result++;
+	}
+	return(result);
+}
+
 int __stdcall
 WinMainCRTStartup
 (void)
@@ -129,12 +142,9 @@ WinMainCRTStartup
 	while(ReadByte < EndOfFile)
 	{
 		
-		if(*ReadByte == ';')
+		if((*ReadByte == ';') || (*ReadByte == 'b'))
 		{
-			while((IsEndOfLine(*ReadByte) == FALSE) && (ReadByte < EndOfFile))
-			{
-				ReadByte++;
-			}
+			ReadByte = findEndOfLine(ReadByte, EndOfFile);
 		}
 		
 		if(IsEndOfLine(*ReadByte))
@@ -195,6 +205,15 @@ WinMainCRTStartup
 	
 	String outputName = create_string(&buffer_strings, "output\\");
 	fileName.len = scan_string(fileName, '.');
+	
+	u32 i = scan_string(fileName, '\\');
+	if(i != 0)
+	{
+		i++;
+		fileName.chars += i;
+		fileName.len -= i;
+	}
+	
 	String temp = copy_string(&buffer_strings, fileName);
 	outputName.len += temp.len;
 	buffer_append_u8(&buffer_strings, 0);
