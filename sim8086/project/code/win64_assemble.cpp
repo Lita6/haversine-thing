@@ -145,6 +145,10 @@ WinMainCRTStartup
 		if((*ReadByte == ';') || (*ReadByte == 'b'))
 		{
 			ReadByte = findEndOfLine(ReadByte, EndOfFile);
+			if(ReadByte >= EndOfFile)
+			{
+				break;
+			}
 		}
 		
 		if(IsEndOfLine(*ReadByte))
@@ -185,20 +189,56 @@ WinMainCRTStartup
 			ReadByte++;
 		}
 		
-		u8 op_code = 0x88;
+		u8 op_code = 0;
 		
 		find_reg_address(regs, &instr.operands[0]);
-		find_reg_address(regs, &instr.operands[1]);
+		b32 is16 = (instr.operands[0].reg_address & 0b1000) > 1;
 		
-		if((instr.operands[0].reg_address & 0b1000) > 1)
+		b32 useModrm = FALSE;
+		b32 useImm = FALSE;
+		s16 immData = 0;
+		if(IsNumber(instr.operands[1].name) == FALSE)
 		{
-			op_code |= 0b01;
+			
+			op_code = 0x88;
+			find_reg_address(regs, &instr.operands[1]);
+			useModrm = TRUE;
+			
+			if(is16 == TRUE)
+			{
+				op_code |= 0b01;
+			}
+			
+		}
+		else
+		{
+			
+			op_code = (u8)(0xb0 | instr.operands[0].reg_address);
+			useImm = TRUE;
+			immData = StringToS16(instr.operands[1].name);
 		}
 		
-		u8 modrm = (u8)((0b11 << 6) | ((instr.operands[1].reg_address & 0b111) << 3) | (instr.operands[0].reg_address & 0b111));
-		
 		buffer_append_u8(&program, op_code);
-		buffer_append_u8(&program, modrm);
+		
+		if(useModrm == TRUE)
+		{		
+			u8 modrm = (u8)((0b11 << 6) | ((instr.operands[1].reg_address & 0b111) << 3) | (instr.operands[0].reg_address & 0b111));
+			buffer_append_u8(&program, modrm);
+		}
+		
+		if(useImm == TRUE)
+		{
+			if(is16 == TRUE)
+			{
+				
+				buffer_append_u16(&program, (u16)immData);
+			}
+			else
+			{
+				
+				buffer_append_u8(&program, (u8)immData);
+			}
+		}
 		
 		instr = {};
 	}

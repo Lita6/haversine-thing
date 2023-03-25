@@ -291,4 +291,55 @@ operator==
 	return(result);
 }
 
+b32
+IsNumber
+(String string)
+{
+	
+	u64 i = 0;
+	if(string.chars[0] == '-')
+	{
+		i = 1;
+	}
+	
+	b32 result = TRUE;
+	for(; i < string.len; i++)
+	{
+		
+		if((string.chars[i] < '0') || (string.chars[i] > '9'))
+		{
+			result = FALSE;
+		}
+	}
+	
+	return(result);
+}
+
+s16
+StringToS16
+(String string)
+{
+	s16 Result = 0;
+	
+	u32 neg = 0;
+	if(string.chars[0] == '-')
+	{
+		neg = 1;
+	}
+	
+	for(u32 i = neg; i < string.len; i++)
+	{
+		
+		Result = Result * 10;
+		Result = Result + (string.chars[i] - '0');
+	}
+	
+	if(neg != 0)
+	{
+		Result = Result * -1;
+	}
+	
+	return(Result);
+}
+
 #endif //WIN64_ASSEMBLE_H
