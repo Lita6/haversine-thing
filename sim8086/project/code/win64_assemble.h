@@ -49,6 +49,7 @@ struct read_file_result
 {
 	u32 ContentsSize;
 	void *Contents;
+	u8 *End;
 };
 
 void 
@@ -81,6 +82,7 @@ Win64ReadEntireFile
 				if(ReadFile(FileHandle, Result.Contents, FileSize32, &BytesRead, 0) && (FileSize32 == BytesRead))
 				{
 					Result.ContentsSize = FileSize32;
+					Result.End = (u8 *)Result.Contents + FileSize32;
 				}
 				else
 				{

@@ -49,6 +49,7 @@ struct read_file_result
 {
 	u32 ContentsSize;
 	void *Contents;
+	u8 *End;
 };
 
 void 
@@ -81,6 +82,7 @@ Win64ReadEntireFile
 				if(ReadFile(FileHandle, Result.Contents, FileSize32, &BytesRead, 0) && (FileSize32 == BytesRead))
 				{
 					Result.ContentsSize = FileSize32;
+					Result.End = (u8 *)Result.Contents + FileSize32;
 				}
 				else
 				{
@@ -299,6 +301,43 @@ append_string
 	{
 		buffer_append_u8(buffer, str.chars[i]);
 	}
+}
+
+String
+U8ToString
+(Buffer *strings, u8 num)
+{
+	
+	String result ={};
+	
+#define MAX 3
+	
+	u8 digits[MAX] = {};
+	u8 mod = 10;
+	u8 read = num;
+	for(u8 i = 0; i < MAX; i++)
+	{
+		digits[i] = (u8)(read % mod);
+		read -= digits[i];
+		
+		if(read == 0)
+		{
+			result.len = i;
+			break;
+		}
+		
+		read /= mod;
+	}
+	
+	result.chars = strings->end;
+	for(s32 i = (s32)result.len; i >= 0; i--)
+	{
+		buffer_append_u8(strings, (u8)(digits[i] + '0'));
+	}
+	
+#undef MAX
+	result.len++;
+	return(result);
 }
 
 #endif //WIN64_DISASSEMBLE_H

@@ -80,32 +80,58 @@ WinMainCRTStartup
 	create_list_entry(&buffer_strings, &regs, "dh", 0b110);
 	create_list_entry(&buffer_strings, &regs, "bh", 0b111);
 	
-	u8 *commandLine = (u8 *)GetCommandLineA();
-	commandLine += 0x4c;
-	String fileName = create_string(&buffer_strings, (char *)commandLine);
+	String commandLine = {};
+	commandLine.chars = (u8 *)GetCommandLineA();
+	commandLine.len = GetStringLength(commandLine.chars);
+	u32 nameStart = scan_string(commandLine, ' ') + 1;
+	String fileName = create_string(&buffer_strings, (char *)(commandLine.chars + nameStart));
 	buffer_append_u8(&buffer_strings, 0x00);
 	fileName.len++;
 	
 	read_file_result file = Win64ReadEntireFile((char *)fileName.chars);
-	u8 *EndOfFile = (u8 *)file.Contents + file.ContentsSize;
-	(void)EndOfFile;
 	
 	u8 *ReadByte = (u8 *)file.Contents;
-	while(ReadByte < EndOfFile)
+	while(ReadByte < file.End)
 	{
 		
 		create_string(&program, "mov ");
-		u8 w = (u8)((*ReadByte & 0b01) << 3);
-		ReadByte++;
 		
-		u8 dest = (u8)((*ReadByte & 0b111) | w);
-		List_Entry *dest_reg = find_reg(&regs, dest);
-		append_string(&program, dest_reg->name);
+		u8 w = 0;
+		u8 destBits = 0;
+		u8 srcBits = 0;
+		String *dest = 0;
+		String *src = 0;
+		if((*ReadByte & 0xb0) == 0xb0)
+		{
+			
+			w = (u8)(*ReadByte & 0b00001000);
+			destBits = (u8)((*ReadByte & 0b111) | w);
+			dest = &((find_reg(&regs, destBits))->name);
+			ReadByte++;
+			
+			if(w == 0)
+			{
+				src = (String *)buffer_allocate(&buffer_strings, sizeof(String));
+				*src = U8ToString(&buffer_strings, *ReadByte);
+			}
+			
+		}
+		else
+		{
+			
+			w = (u8)((*ReadByte & 0b01) << 3);
+			ReadByte++;
+			
+			destBits = (u8)((*ReadByte & 0b111) | w);
+			dest = &((find_reg(&regs, destBits))->name);
+			
+			srcBits = (u8)(((*ReadByte & (0b111 << 3)) >> 3) | w);
+			src = &((find_reg(&regs, srcBits))->name);
+		}
+		
+		append_string(&program, *dest);
 		create_string(&program, ", ");
-		
-		u8 src = (u8)(((*ReadByte & (0b111 << 3)) >> 3) | w);
-		List_Entry *src_reg = find_reg(&regs, src);
-		append_string(&program, src_reg->name);
+		append_string(&program, *src);
 		
 		buffer_append_u8(&program, '\n');
 		ReadByte++;
@@ -113,7 +139,10 @@ WinMainCRTStartup
 	
 	*(program.end - 1) = 0;
 	
-	String dsmFileName = create_string(&buffer_strings, "dsm_");
+	String dsmFileName = create_string(&buffer_strings, "tests\\dsm_");
+	u32 slashOffset = scan_string(fileName, '\\') + 1;
+	fileName.chars += slashOffset;
+	fileName.len -= slashOffset;
 	append_string(&buffer_strings, fileName);
 	dsmFileName.len += fileName.len;
 	u8 *end = dsmFileName.chars + dsmFileName.len - 1;
