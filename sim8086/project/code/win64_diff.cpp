@@ -75,9 +75,8 @@ WinMainCRTStartup
 	read_file_result fileOne = Win64ReadEntireFile((char *)fileOneName.chars);
 	read_file_result fileTwo = Win64ReadEntireFile((char *)fileTwoName.chars);
 	
-	u32 max = (fileOne.ContentsSize <= fileTwo.ContentsSize) ? fileOne.ContentsSize : fileTwo.ContentsSize;
-	
-	for(u32 i = 0; i < max; i++)
+	Assert(fileOne.ContentsSize == fileTwo.ContentsSize);
+	for(u32 i = 0; i < fileOne.ContentsSize; i++)
 	{
 		Assert(((u8 *)fileOne.Contents)[i] == ((u8 *)fileTwo.Contents)[i]);
 	}

@@ -340,4 +340,41 @@ U8ToString
 	return(result);
 }
 
+String
+U16ToString
+(Buffer *strings, u16 num)
+{
+	
+	String result ={};
+	
+#define MAX 5
+	
+	u8 digits[MAX] = {};
+	u16 mod = 10;
+	u16 read = num;
+	for(u8 i = 0; i < MAX; i++)
+	{
+		digits[i] = (u8)(read % mod);
+		read -= (u16)digits[i];
+		
+		if(read == 0)
+		{
+			result.len = i;
+			break;
+		}
+		
+		read /= mod;
+	}
+	
+	result.chars = strings->end;
+	for(s32 i = (s32)result.len; i >= 0; i--)
+	{
+		buffer_append_u8(strings, (u8)(digits[i] + '0'));
+	}
+	
+#undef MAX
+	result.len++;
+	return(result);
+}
+
 #endif //WIN64_DISASSEMBLE_H

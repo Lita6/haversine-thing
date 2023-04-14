@@ -90,6 +90,8 @@ WinMainCRTStartup
 	
 	read_file_result file = Win64ReadEntireFile((char *)fileName.chars);
 	
+	create_string(&program, "bits 16\n\n");
+	
 	u8 *ReadByte = (u8 *)file.Contents;
 	while(ReadByte < file.End)
 	{
@@ -101,18 +103,23 @@ WinMainCRTStartup
 		u8 srcBits = 0;
 		String *dest = 0;
 		String *src = 0;
-		if((*ReadByte & 0xb0) == 0xb0)
+		if((*ReadByte & 0xf0) == 0xb0)
 		{
 			
-			w = (u8)(*ReadByte & 0b00001000);
-			destBits = (u8)((*ReadByte & 0b111) | w);
+			destBits = (u8)(*ReadByte & 0b1111);
 			dest = &((find_reg(&regs, destBits))->name);
+			
+			w = (u8)(*ReadByte & 0b1000);
 			ReadByte++;
 			
+			src = (String *)buffer_allocate(&buffer_strings, sizeof(String));
 			if(w == 0)
 			{
-				src = (String *)buffer_allocate(&buffer_strings, sizeof(String));
 				*src = U8ToString(&buffer_strings, *ReadByte);
+			}
+			else
+			{
+				*src = U16ToString(&buffer_strings, *(u16 *)ReadByte++);
 			}
 			
 		}
@@ -125,7 +132,7 @@ WinMainCRTStartup
 			destBits = (u8)((*ReadByte & 0b111) | w);
 			dest = &((find_reg(&regs, destBits))->name);
 			
-			srcBits = (u8)(((*ReadByte & (0b111 << 3)) >> 3) | w);
+			srcBits = (u8)(((*ReadByte & 0b111000) >> 3) | w);
 			src = &((find_reg(&regs, srcBits))->name);
 		}
 		
@@ -139,10 +146,10 @@ WinMainCRTStartup
 	
 	*(program.end - 1) = 0;
 	
-	String dsmFileName = create_string(&buffer_strings, "tests\\dsm_");
 	u32 slashOffset = scan_string(fileName, '\\') + 1;
 	fileName.chars += slashOffset;
 	fileName.len -= slashOffset;
+	String dsmFileName = create_string(&buffer_strings, "tests\\dsm_");
 	append_string(&buffer_strings, fileName);
 	dsmFileName.len += fileName.len;
 	u8 *end = dsmFileName.chars + dsmFileName.len - 1;
