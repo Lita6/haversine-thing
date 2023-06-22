@@ -126,14 +126,25 @@ WinMainCRTStartup
 		else
 		{
 			
+			u8 d = (u8)(*ReadByte & 0b10);
 			w = (u8)((*ReadByte & 0b01) << 3);
 			ReadByte++;
 			
-			destBits = (u8)((*ReadByte & 0b111) | w);
-			dest = &((find_reg(&regs, destBits))->name);
+			u8 mode = (u8)((*ReadByte & 0b11000000) >> 6);
 			
-			srcBits = (u8)(((*ReadByte & 0b111000) >> 3) | w);
-			src = &((find_reg(&regs, srcBits))->name);
+			if(mode == 0b11)
+			{			
+				destBits = (u8)((*ReadByte & 0b111) | w);
+				dest = &((find_reg(&regs, destBits))->name);
+				
+				srcBits = (u8)(((*ReadByte & 0b111000) >> 3) | w);
+				src = &((find_reg(&regs, srcBits))->name);
+			}
+			else if(mode == 0b00)
+			{
+				
+			}
+			
 		}
 		
 		append_string(&program, *dest);
